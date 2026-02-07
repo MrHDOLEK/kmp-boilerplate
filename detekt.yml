@@ -1,0 +1,97 @@
+build:
+  maxIssues: 0
+  weights:
+    complexity: 2
+    style: 1
+    comments: 0
+
+complexity:
+  active: true
+  LongMethod:
+    threshold: 80
+  LongParameterList:
+    functionThreshold: 8
+    constructorThreshold: 10
+  TooManyFunctions:
+    thresholdInFiles: 20
+    thresholdInClasses: 15
+  ComplexCondition:
+    threshold: 5
+  CyclomaticComplexMethod:
+    threshold: 15
+
+style:
+  active: true
+  MagicNumber:
+    active: false
+  MaxLineLength:
+    maxLineLength: 120
+  WildcardImport:
+    active: false
+  UnusedImports:
+    active: true
+  UnusedPrivateMember:
+    active: true
+  UnusedPrivateClass:
+    active: true
+  RedundantVisibilityModifierRule:
+    active: false
+  ReturnCount:
+    max: 4
+  NewLineAtEndOfFile:
+    active: false
+  UnnecessaryAbstractClass:
+    active: true
+  UseDataClass:
+    active: true
+  UtilityClassWithPublicConstructor:
+    active: true
+
+naming:
+  active: true
+  FunctionNaming:
+    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  VariableNaming:
+    variablePattern: '[a-z][a-zA-Z0-9]*'
+  MatchingDeclarationName:
+    active: false
+
+exceptions:
+  active: true
+  TooGenericExceptionCaught:
+    active: false
+  SwallowedException:
+    active: true
+
+performance:
+  active: true
+  SpreadOperator:
+    active: false
+
+comments:
+  active: false
+
+Compose:
+  active: true
+  ComposableNaming:
+    active: true
+  PreviewPublic:
+    active: false
+  ModifierMissing:
+    active: false
+  MutableStateAutoboxing:
+    active: false
+  ModifierNotUsedAtRoot:
+    active: true
+  ModifierReused:
+    active: true
+  MultipleContentEmitters:
+    active: true
+  MutableStateParam:
+    active: true
+  UnstableCollections:
+    active: false
+  ViewModelForwarding:
+    active: true
+  ViewModelInjection:
+    active: true
