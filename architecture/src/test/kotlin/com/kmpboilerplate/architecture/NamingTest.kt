@@ -7,14 +7,7 @@ import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
 import kotlin.test.Test
 
-/** Naming: contracts, services, repositories and use cases say what they are in their names. */
 class NamingTest {
-    /**
-     * The domain is packaged by feature, so a contract sits beside the entity it serves rather than
-     * in a `repository/` folder. What tells the two apart is the name: every contract ends in
-     * `Interface`, and the ones that persist say so in full. The sealed hierarchies are facts with
-     * variants, not contracts, so they are out of the count.
-     */
     @Test
     fun `should name every domain contract Interface and every persistence one RepositoryInterface`() {
         val contracts = ProjectScope.inPackage(DomainCollaborator.DOMAIN).interfaces().filterNot(::isSealed)
@@ -30,17 +23,6 @@ class NamingTest {
             }
     }
 
-    /**
-     * The domain is packaged by feature, so the name is the only thing that tells a service from a
-     * fact, and every rule that tells them apart reads it — see [DomainCollaborator]. A class that takes
-     * a contract, a port or a service in its constructor is built by Koin, whatever it is called. Named
-     * `CatPolicy`, it is a fact to [EntityRuleTest], which then stops looking at what it reaches for,
-     * and a value to [DependencyInjectionTest], which then never asks for its registration: the gate
-     * stays green and the first screen that injects it dies with a missing Koin definition.
-     *
-     * A constructor parameter is read by every name its type spells, qualified or not, through an import
-     * alias and through a domain typealias.
-     */
     @Test
     fun `should give every domain class that takes a collaborator a service name`() {
         ProjectScope
@@ -52,11 +34,6 @@ class NamingTest {
             }
     }
 
-    /**
-     * The words are matched as written, on classes named `*Repository` and contracts named
-     * `*RepositoryInterface`: `SqliteCatRepository` fails, `SQLiteCatRepository` passes, and so does a
-     * repository by role not named like one; those two stay the reviewer's.
-     */
     @Test
     fun `should keep technology out of repository names`() {
         ProjectScope.production
@@ -76,10 +53,6 @@ class NamingTest {
             ) { contract -> namesTechnology(contract.name) }
     }
 
-    /**
-     * A `private` or `internal` class beside an action is that file's helper: composeApp is a separate
-     * module and can call neither, so neither is a use case.
-     */
     @Test
     fun `should name every use case Action and make it invocable`() {
         ProjectScope

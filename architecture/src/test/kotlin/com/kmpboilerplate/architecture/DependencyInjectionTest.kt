@@ -6,17 +6,6 @@ import com.lemonappdev.konsist.api.verify.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Dependency injection: an unregistered dependency fails at runtime, not at compile
- * time. This moves that failure to the gate.
- *
- * What counts as registered is what the app starts — see [KoinGraph]: a definition in a module
- * `container` never lists, or on one platform only, is as missing at runtime as no definition at all.
- *
- * It reads the source, not a running Koin: a class counts as injected by its role — its folder, its
- * suffix or the contract it implements — and a constructor dependency of none of those roles is not
- * asked for. Nothing runs Koin's `verify()`.
- */
 class DependencyInjectionTest {
     @Test
     fun `should start every Koin module from the container`() {
@@ -50,14 +39,6 @@ class DependencyInjectionTest {
             }
     }
 
-    /**
-     * A platform module is one `actual` body per platform, and each is written by hand. A class the
-     * Android body builds and the iOS or desktop body does not is missing there — unless only Android
-     * declares it, in which case there is nothing for the others to build.
-     *
-     * Until the first `expect fun x(): Module` is started, no platform body exists and there is nothing to
-     * compare; from then on every platform has to register something.
-     */
     @Test
     fun `should register a class on both platforms unless only one platform declares it`() {
         val declaredIn =
@@ -97,11 +78,6 @@ class DependencyInjectionTest {
         )
     }
 
-    /**
-     * Registering an implementation is half of it: a service asks Koin for the contract, and a
-     * `singleOf(::CatRepository)` without `bind` answers nothing to `CatRepositoryInterface`. A
-     * contract counts as bound when the common modules bind it, or when every platform module does.
-     */
     @Test
     fun `should bind every domain contract that has an implementation`() {
         val contracts =
@@ -137,11 +113,6 @@ class DependencyInjectionTest {
         )
     }
 
-    /**
-     * Application layer: an action is registered as a factory. A single hands every screen
-     * the instance the last one used, with whatever state it kept. Every place a started module builds
-     * the action is read, so a second registration as a single elsewhere counts too.
-     */
     @Test
     fun `should register every action as a factory`() {
         val actions =
@@ -169,15 +140,6 @@ class DependencyInjectionTest {
         )
     }
 
-    /**
-     * A class that keeps state between calls — a `var` property, or one holding a mutable flow, state or
-     * collection — is registered as a single. As a factory it compiles and passes every other rule, yet each
-     * screen gets its own empty copy: what one screen loaded or chose is gone on the next, and every screen
-     * fetches it again.
-     *
-     * Plain assertions without a guard against an empty list: no Koin-built class keeps state yet, and a
-     * rule that demanded one would push state into the code to satisfy itself.
-     */
     @Test
     fun `should register every class that keeps state as a single`() {
         val stateful =
@@ -212,12 +174,6 @@ class DependencyInjectionTest {
             property.isVar || MUTABLE_HOLDER.containsMatchIn(KotlinSources.symbolsOf(property.text))
         }
 
-    /**
-     * A folder presumes what it holds is built by Koin only for what another module can reach: a private or
-     * internal class beside an action, a mapper or a repository is that file's helper. A name or a role says
-     * Koin builds it whatever its visibility — an internal *Action, or a class implementing a repository
-     * contract, still needs its definition.
-     */
     private fun isInjected(declaration: KoClassDeclaration): Boolean {
         val packageName = declaration.packagee?.name.orEmpty()
         val inInjectedFolder =
@@ -232,7 +188,6 @@ class DependencyInjectionTest {
             INJECTED_SUFFIXES.any { suffix -> declaration.name.endsWith(suffix) }
     }
 
-    /** `bind X::class`, `binds(… X::class …)`, `bind<X>()`, or a definition typed as the contract. */
     private fun bindingOf(contract: String): Regex =
         Regex(
             """\bbinds?\b[^\n]*\b$contract\s*::\s*class|\bbind\s*<\s*$contract\s*>|""" +
@@ -253,15 +208,8 @@ class DependencyInjectionTest {
                 InfrastructureRole.REPOSITORIES,
             )
 
-        /**
-         * The domain no longer has a `service` package to name — it is packaged by feature — so the
-         * suffixes carry the whole weight there. [DomainCollaborator.SERVICE_SUFFIXES] is the same
-         * list the architecture rules read, so a service cannot be a collaborator to one and a value
-         * to the other.
-         */
         val INJECTED_SUFFIXES = listOf("Action", "Repository") + DomainCollaborator.SERVICE_SUFFIXES
 
-        /** Data holders, enumerations and hierarchies are values, not collaborators Koin builds. */
         val NOT_INSTANTIATED =
             arrayOf(KoModifier.DATA, KoModifier.ENUM, KoModifier.SEALED, KoModifier.VALUE, KoModifier.PRIVATE)
     }

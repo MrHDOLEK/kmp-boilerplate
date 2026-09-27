@@ -5,16 +5,6 @@ import com.lemonappdev.konsist.api.verify.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Application layer: a mapper maps; the service gathers and the action delegates.
- *
- * A port is not on that list. A mapper that reads a clock, a time zone or a location source is still
- * mapping — those answer what "now" and "here" are, not what to fetch.
- *
- * Each import rule has a code half, and the `suspend` rule reads the code alone: a qualified
- * constructor parameter, an `object` mapper and a top-level function are all written without an
- * import a rule could read.
- */
 class ViewModelMapperTest {
     @Test
     fun `should keep view model mappers free of services and repositories`() {
@@ -28,10 +18,6 @@ class ViewModelMapperTest {
         }
     }
 
-    /**
-     * The code half of the rule above. It compares against the names the domain declares, because a
-     * mapper legitimately takes another `*ViewModelMapper`, whose suffix alone reads as a service.
-     */
     @Test
     fun `should name no service or repository in the code of a view model mapper`() {
         val domain = ProjectScope.inPackage(DomainCollaborator.DOMAIN)
@@ -63,10 +49,6 @@ class ViewModelMapperTest {
         assertTrue(offenders.isEmpty(), "$MAPS\n${offenders.joinToString(separator = "\n")}")
     }
 
-    /**
-     * Read from the text, so a `suspend` in an `object`, a top-level function, a companion or a
-     * suspending lambda type counts as well as one in a class.
-     */
     @Test
     fun `should keep view model mappers free of suspending functions`() {
         val files = ProjectScope.inPackage(MAPPERS).files
@@ -79,12 +61,6 @@ class ViewModelMapperTest {
         assertTrue(offenders.isEmpty(), "$LOADS\n${offenders.joinToString(separator = "\n")}")
     }
 
-    /**
-     * A mapper reads no file, no network and no database: it imports Kotlin, kotlinx.datetime, the
-     * domain it maps from and the application it maps to, and nothing else. Read from Konsist's
-     * imports, so a wildcard of a one-segment package (`import okio.*`, reported as `okio`) counts
-     * too — the qualified names of the code half below never see it.
-     */
     @Test
     fun `should import only kotlin, kotlinx datetime, the domain and the application into a view model mapper`() {
         val imports = ProjectScope.inPackage(MAPPERS).imports
@@ -94,10 +70,6 @@ class ViewModelMapperTest {
         }
     }
 
-    /**
-     * The code half of the rule above: the same allow-list over every name written qualified. A
-     * dotted name counts when it starts at a package root the project knows — see [PackageRoots].
-     */
     @Test
     fun `should keep input and output libraries out of view model mappers`() {
         QualifiedReference.assertNoneNamed(ProjectScope.inPackage(MAPPERS).files, NO_INPUT_OUTPUT) { name ->

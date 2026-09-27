@@ -4,21 +4,7 @@ import com.lemonappdev.konsist.api.verify.assertFalse
 import com.lemonappdev.konsist.api.verify.assertTrue
 import kotlin.test.Test
 
-/**
- * Infrastructure layer: a repository reads and writes; the decisions are the domain's.
- *
- * A repository is chosen by role — see [InfrastructureRole] — so the rules below hold for a
- * repository under `repository/<area>/` and for a wire-format one beside its adapter alike.
- */
 class RepositoryRuleTest {
-    /**
-     * The identifiers of a repository's file are read, import lines included and comments and strings
-     * aside, so a qualified name, a wildcard import followed by a bare name and an alias are all seen.
-     *
-     * Reading the clock is deciding when "now" is, and when is a rule: the service that decides to run
-     * passes the moment in. `Clock` on its own covers `Clock.System`, `kotlin.time.Clock` and a member
-     * import of either.
-     */
     @Test
     fun `should keep business rules out of repositories`() {
         val services =
@@ -38,12 +24,6 @@ class RepositoryRuleTest {
         }
     }
 
-    /**
-     * The folder names the feature, the same word the domain uses for the contract. A repository over
-     * local storage sits under `repository/<area>/` of the contract it implements; one that speaks a wire
-     * format sits beside its adapter. A repository that implements no contract belongs to no area, so
-     * an adapter is the only place left for it.
-     */
     @Test
     fun `should file every repository under the area of its contract or beside its adapter`() {
         val areas = DomainArea.names()
@@ -69,7 +49,6 @@ class RepositoryRuleTest {
         }
     }
 
-    /** The area of a domain package: `shared` holds no area of its own, the folders inside it do. */
     private fun areaOf(packageName: String): String =
         packageName
             .removePrefix("${DomainCollaborator.DOMAIN}.")

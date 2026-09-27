@@ -5,14 +5,6 @@ import com.lemonappdev.konsist.api.verify.assertFalse
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * The UI reaches infrastructure only through the bootstrap that starts dependency injection — called by
- * the Android application, the desktop `main` and iOS's `startDependencyInjection`. It never touches the
- * domain either: a screen reads and writes through the application layer's actions.
- *
- * Each import rule has a text half, because a fully qualified name needs no import — see
- * [QualifiedReference].
- */
 class UserInterfaceBoundaryTest {
     @Test
     fun `should reach infrastructure from the compose module only through bootstrap`() {
@@ -41,15 +33,6 @@ class UserInterfaceBoundaryTest {
         }
     }
 
-    /**
-     * `typealias CatEntity = Cat` in the application layer hands the UI a domain entity under a name no
-     * import rule reads as the domain. An alias is judged by what its right-hand side names: a domain
-     * import of its file, under its own name or an import alias; any domain type when the file imports a
-     * domain package whole; or a qualified domain name.
-     *
-     * Plain assertions, because the application layer declares no typealias today and a strict Konsist
-     * assertion fails on an empty list.
-     */
     @Test
     fun `should alias no domain type in the application layer`() {
         val application = ProjectScope.inPackage(APPLICATION)
@@ -69,13 +52,6 @@ class UserInterfaceBoundaryTest {
         )
     }
 
-    /**
-     * `val cat: Cat` in a ViewModel lets a screen read `tile.cat.tags` with no domain import of its own,
-     * so an action returning ViewModels would hand the UI an entity one level down. The mappers translate
-     * between the two and may name the domain; every other ViewModel file names nothing from it —
-     * imported under its own name or an alias, a whole package, or qualified. The qualified names of a
-     * file include its import lines, so this one reading covers every spelling.
-     */
     @Test
     fun `should name nothing from the domain in a view model`() {
         val viewModels =
@@ -86,7 +62,6 @@ class UserInterfaceBoundaryTest {
         QualifiedReference.assertNoneNamed(viewModels, CARRIES_NO_ENTITY) { name -> ImportRule.reaches(name, DOMAIN) }
     }
 
-    /** An alias is judged by what its right-hand side names — see [DomainReference]. */
     private fun aliasesTheDomain(alias: KoTypeAliasDeclaration): Boolean =
         DomainReference.namedIn(KotlinSources.aliasedIn(alias.text), alias.containingFile).isNotEmpty()
 

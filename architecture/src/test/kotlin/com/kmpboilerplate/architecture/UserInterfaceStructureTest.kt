@@ -5,20 +5,7 @@ import com.lemonappdev.konsist.api.verify.assertTrue
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * UI architecture — layout, component, screen. A component takes values and callbacks: it never loads
- * data and never reaches into the container for a use case. The screen folder lists the app's pages and
- * nothing else — a helper that drifts in there is a component, a callback bundle or an action
- * bundle that has not been given its folder yet.
- *
- * The component rules read the code, not only the imports: a wildcard, an import alias and a fully
- * qualified name reach Koin or a use case as surely as an import does.
- */
 class UserInterfaceStructureTest {
-    /**
-     * An application action, or an action bundle from `ui/action` that hands a screen its use cases —
-     * `catScreenActions()` as a default parameter is a component injecting them itself.
-     */
     @Test
     fun `should keep use cases out of components`() {
         QualifiedReference.assertNoneNamed(
@@ -27,10 +14,6 @@ class UserInterfaceStructureTest {
         ) { name -> USE_CASE_PACKAGES.any { forbidden -> ImportRule.reaches(name, forbidden) } }
     }
 
-    /**
-     * Any identifier that names Koin: `koinInject`, `getKoin`, `KoinComponent`, `koinViewModel`,
-     * `KoinPlatform`, and the `koin` segment of every `org.koin` import or qualified name.
-     */
     @Test
     fun `should keep dependency injection out of components`() {
         val files = components()
@@ -51,11 +34,6 @@ class UserInterfaceStructureTest {
         )
     }
 
-    /**
-     * `ui/component` follows the areas of the application, so a cat's tile and the mapper behind it
-     * are found under the same word; `common` holds what every area draws with. The areas are read
-     * from `application/viewmodel`, the layer a component displays.
-     */
     @Test
     fun `should file every component under an area of the application or common`() {
         val areas =
@@ -98,10 +76,8 @@ class UserInterfaceStructureTest {
         const val VIEW_MODEL = "com.kmpboilerplate.application.viewmodel"
         const val KOTLIN_EXTENSION = ".kt"
 
-        /** `viewmodel/mapper` is a layer of its own, not an area of `viewmodel`. */
         const val MAPPER_FOLDER = "mapper"
 
-        /** The building blocks every area draws with: rows, tiles, banners, states. */
         const val COMMON = "common"
 
         val USE_CASE_PACKAGES = listOf("com.kmpboilerplate.application.action", "com.kmpboilerplate.app.ui.action")

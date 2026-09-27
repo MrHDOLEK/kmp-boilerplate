@@ -5,16 +5,6 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
-/**
- * Project structure: two product modules, each with its own package roots, and every file where its
- * package says it is.
- *
- * Every other rule selects its files by package or by module, so a file outside that map is judged
- * by none of them: a file with no `package` line belongs to no layer, a `com.kmpboilerplate.common`
- * belongs to no layer either, a `com.kmpboilerplate.domain` file in composeApp reads the domain without
- * an import, and a third module has no boundary at all. detekt's InvalidPackageDeclaration says nothing about
- * a file without a package, and ktlint's `package-name` is off, so this closes the map instead.
- */
 class SourceLayoutTest {
     @Test
     fun `should declare in every production file the package its folder names`() {
@@ -65,12 +55,6 @@ class SourceLayoutTest {
         )
     }
 
-    /**
-     * Konsist drops every path with a `build/` or `target/` directory in it, source folders included,
-     * and every path with a segment that starts with `buildsrc` in any case, a file name included —
-     * `BuildSrcProbe.kt` as much as a `buildSrc/` folder. Only what sits under `src/` is judged here,
-     * so a module's output and a root `buildSrc/` of build logic stay out of it.
-     */
     @Test
     fun `should keep every Kotlin source where Konsist reads it`() {
         val hidden =

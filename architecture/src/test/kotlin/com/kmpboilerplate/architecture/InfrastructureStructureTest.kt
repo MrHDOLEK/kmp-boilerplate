@@ -4,20 +4,7 @@ import com.lemonappdev.konsist.api.declaration.combined.KoClassAndObjectDeclarat
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Infrastructure layer: DTOs sit in their adapter's `dto/` folder, mappers beside the
- * adapter they serve, and there is no top-level `infrastructure/dto/` or `infrastructure/mapper/`.
- */
 class InfrastructureStructureTest {
-    /**
-     * A DTO is named `*Dto` or is `@Serializable`; a mapper is named `*Mapper`. Either one outside an
-     * adapter's folder of its kind is reported, and so is any infrastructure file whose package has a
-     * `dto` or `mapper` segment anywhere but under an adapter — `infrastructure.dto`,
-     * `infrastructure.mapper` and `infrastructure.http.dto` included.
-     *
-     * A row in a `dto/` folder that carries neither the `Dto` suffix nor `@Serializable` is judged only by
-     * the folder it is in.
-     */
     @Test
     fun `should keep data transfer objects and mappers inside their adapter`() {
         val infrastructure = ProjectScope.inPackage(InfrastructureRole.INFRASTRUCTURE)

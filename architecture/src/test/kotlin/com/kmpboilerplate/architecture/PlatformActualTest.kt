@@ -10,15 +10,6 @@ import com.lemonappdev.konsist.api.provider.modifier.KoModifierProvider
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Platform abstraction: an `expect` without an actual on every platform breaks only the build of the
- * missing target, which a local build of one platform never notices.
- *
- * An `expect` is paired with its actuals by module, package and name, so overloads count as one. The
- * compile of each target in CI catches what this misses.
- *
- * No guard against an empty list: the code declares no `expect` today, and the rule holds from the first.
- */
 class PlatformActualTest {
     @Test
     fun `should give every expect declaration an actual on android ios and desktop`() {
@@ -42,7 +33,6 @@ class PlatformActualTest {
         assertTrue(missing.isEmpty(), missing.joinToString(separator = "\n"))
     }
 
-    /** Through the generic modifier list: objects expose `expect`/`actual` only there. */
     private fun hasModifier(
         declaration: KoBaseDeclaration,
         modifier: KoModifier,

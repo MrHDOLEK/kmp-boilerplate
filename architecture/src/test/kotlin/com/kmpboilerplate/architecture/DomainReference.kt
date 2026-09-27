@@ -2,13 +2,7 @@ package com.kmpboilerplate.architecture
 
 import com.lemonappdev.konsist.api.declaration.KoFileDeclaration
 
-/**
- * Which names in a piece of code reach the domain, however the file spelled them: a domain import
- * under its own name or an import alias (`Cat as Kitten`), any domain type when the file imports
- * a domain package whole, or a qualified domain name that needs no import at all.
- */
 object DomainReference {
-    /** Every class, interface, object and typealias the domain declares, nested ones included. */
     val typeNames: Set<String> by lazy {
         val domain = ProjectScope.inPackage(DomainCollaborator.DOMAIN)
 
@@ -20,7 +14,6 @@ object DomainReference {
         ).toSet()
     }
 
-    /** The names in [code] that reach the domain through the imports of [file], or qualified. */
     fun namedIn(
         code: String,
         file: KoFileDeclaration,

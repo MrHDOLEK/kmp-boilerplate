@@ -13,23 +13,7 @@ import com.lemonappdev.konsist.api.provider.KoNameProvider
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Testing conventions, held over [ProjectScope.tests] — the only rules that read the test source sets: a test is a
- * backticked sentence starting with `should`; it runs in commonTest, and so on every target, unless it needs the
- * JVM; and a test double is a hand-written fake, never a mock.
- *
- * Plain assertions, as in [SuppressionTest]: a Konsist assertion honours a `@Suppress` on what it judges, and
- * SuppressionTest reads production code only, so a test file could silence a Konsist rule about itself. Each rule
- * checks instead that it found something to judge, where there is something to find.
- *
- * Not checked, so that it is written down: where a fake lives, and the Arrange-Act-Assert layout.
- */
 class TestConventionTest {
-    /**
-     * A test is a function annotated `Test` — kotlin.test's or JUnit's, bare, qualified or under an import alias.
-     * Konsist reports a name without its backticks, so the name is read from the code: the first one after `fun`,
-     * as written. The tests of this module are held to it as well.
-     */
     @Test
     fun `should name every test a backticked sentence starting with should`() {
         val tests = ProjectScope.tests.files.flatMap { file -> testsIn(file).map { test -> file to test } }
@@ -45,12 +29,6 @@ class TestConventionTest {
         assertTrue(offenders.isEmpty(), "$SENTENCES\n${offenders.joinToString(separator = "\n")}")
     }
 
-    /**
-     * Left in desktopTest or androidUnitTest, a test that could run in commonTest silently drops the other targets'
-     * coverage, iOS above all. A test there uses what only the JVM has — see [needsTheJvm].
-     *
-     * No guard against an empty list: every test lives in commonTest today, which is what the rule asks for.
-     */
     @Test
     fun `should keep in a jvm test source set only the tests that need the jvm`() {
         val jvmOnly = jvmOnlyNames()
@@ -63,7 +41,6 @@ class TestConventionTest {
         assertTrue(offenders.isEmpty(), "$COMMON_FIRST\n${offenders.joinToString(separator = "\n")}")
     }
 
-    /** No mocking library imported or named qualified, and nothing the tests declare named as a mock. */
     @Test
     fun `should use fakes and no mocking library in the tests`() {
         val files = ProjectScope.tests.files
@@ -103,7 +80,6 @@ class TestConventionTest {
         aliases: Map<String, String>,
     ): Boolean = function.annotations.any { annotation -> (aliases[annotation.name] ?: annotation.name) == TEST }
 
-    /** The first name after `fun`, as written: in backticks, `should` and a space first. */
     private fun isSentence(test: KoFunctionDeclaration): Boolean =
         HEADER
             .find(KotlinSources.symbolsOf(test.text))
@@ -114,11 +90,6 @@ class TestConventionTest {
     private fun jvmTestFiles(): List<KoFileDeclaration> =
         ProjectScope.tests.files.filter { file -> file.sourceSetName in JVM_TESTS }
 
-    /**
-     * What only the JVM carries, by fully qualified name: what androidMain or desktopMain declares and commonMain
-     * does not, and every helper of a JVM test source set that uses one of those or a JVM package. A helper that
-     * needs nothing of the JVM makes no caller need it either.
-     */
     private fun jvmOnlyNames(): Set<String> {
         val production = ProjectScope.production.files
         val helpers = jvmTestFiles().filter { file -> testsIn(file).isEmpty() }
@@ -135,12 +106,6 @@ class TestConventionTest {
         return names
     }
 
-    /**
-     * Whether [file] uses what only the JVM carries: a name reaching [JVM_PACKAGES] or [jvmOnly] that it imports
-     * and reads, or writes out qualified; a name of [jvmOnly] from its own package; or a class java.lang supplies
-     * with no import. An import the code never reads, a wildcard import and a JUnit name kotlin.test mirrors are no
-     * reason to stay on the JVM.
-     */
     private fun needsTheJvm(
         file: KoFileDeclaration,
         jvmOnly: Set<String>,
@@ -202,13 +167,6 @@ class TestConventionTest {
         const val TEST = "Test"
         const val SHOULD = "`should "
 
-        /**
-         * The test source sets that run on the JVM alone, and the main source sets they see beside commonMain.
-         *
-         * androidInstrumentedTest is left out on purpose: it runs on a device or an emulator, so what it needs is the
-         * Android runtime rather than the JVM, and whether a test there could have been a commonTest one is the
-         * reviewer's. None exists today.
-         */
         val JVM_TESTS = setOf("desktopTest", "androidUnitTest")
         val JVM_MAINS = listOf("androidMain", "desktopMain")
 
@@ -224,10 +182,6 @@ class TestConventionTest {
             "A test double is a hand-written fake, such as FakeCatRepository: no mocking library, and nothing " +
                 "named as a mock."
 
-        /**
-         * What the JVM test classpaths carry and commonTest's does not: the JDK, JUnit (kotlin-test's JVM variant),
-         * OkHttp, and the Android and desktop libraries. A new JVM-only test dependency is added here with it.
-         */
         val JVM_PACKAGES =
             listOf(
                 "java",
@@ -243,7 +197,6 @@ class TestConventionTest {
                 "io.ktor.client.engine.okhttp",
             )
 
-        /** JUnit names kotlin.test has a common twin of: writing them keeps a test on the JVM for nothing. */
         val MIRRORED_BY_KOTLIN_TEST =
             listOf("org.junit.Test", "org.junit.Before", "org.junit.After", "org.junit.Ignore", "org.junit.Assert")
 
@@ -262,10 +215,8 @@ class TestConventionTest {
 
         val HEADER = Regex("""\bfun\s+(?:<[^>]*>\s*)?(`[^`\n]*`|\w+)""")
 
-        /** Whitespace around a dot, matched from the start of its run only — see KotlinSources. */
         val AROUND_DOT = Regex("""(?<!\s)\s*\.\s*""")
 
-        /** A java.lang class the JVM supplies without an import. */
         val JAVA_LANG = Regex("""(?<![\w.])(System|Thread|Runtime|ProcessBuilder|ClassLoader|Math|Integer)\.""")
 
         val CLASS_JAVA = Regex("""::\s*class\.java\b""")

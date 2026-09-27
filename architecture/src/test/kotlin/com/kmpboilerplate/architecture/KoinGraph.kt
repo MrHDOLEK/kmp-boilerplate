@@ -1,20 +1,5 @@
 package com.kmpboilerplate.architecture
 
-/**
- * The Koin graph as the app starts it, read from the text of `infrastructure/config`.
- *
- * `bootstrap()` installs `container`, and `container` names the common modules and calls the platform
- * ones: `expect fun x(): Module` in commonMain, whose `actual fun x(): Module = module { }` in
- * androidMain, iosMain and desktopMain is each platform's body. A definition counts only in a body on that path,
- * and a platform body counts for its own platform alone. A mention anywhere else in the package — a
- * module nobody lists, an import, a comment — registers nothing at runtime, so it registers nothing
- * here either.
- *
- * Three shapes are read: `val x = module { }`, `[actual] fun x(): Module = module { }` and
- * `val container = listOf(names and calls)`. Anything else — another way of declaring a module,
- * `includes(...)`, an expression as an entry of the list — is reported as a problem rather than
- * guessed at, so a shape this reading does not know fails the gate instead of passing it.
- */
 object KoinGraph {
     const val COMMON = "commonMain"
 
@@ -22,7 +7,6 @@ object KoinGraph {
 
     val ALL = listOf(COMMON) + PLATFORMS
 
-    /** One `module { }` block: [kind] is `val` or `fun`, [code] the block with comments and literals blanked. */
     class Body(
         val kind: String,
         val name: String,
@@ -31,7 +15,6 @@ object KoinGraph {
         val code: String,
     )
 
-    /** The bodies the app starts, and every way the configuration strayed from the shapes above. */
     class Reading(
         val started: List<Body>,
         val problems: List<String>,
@@ -39,25 +22,17 @@ object KoinGraph {
 
     val reading: Reading by lazy { read() }
 
-    /** The code of every started body compiled into one of [sourceSets]. */
     fun registrationsIn(sourceSets: Collection<String>): String =
         reading.started
             .filter { body -> body.sourceSet in sourceSets }
             .joinToString(separator = "\n") { body -> body.code }
 
-    /** The classes the started bodies of [sourceSets] build: `::Name` or a constructor call `Name(`. */
     fun registeredNamesIn(sourceSets: Collection<String>): Set<String> =
         REGISTERED
             .findAll(registrationsIn(sourceSets))
             .map { match -> match.groupValues[1].ifEmpty { match.groupValues[2] } }
             .toSet()
 
-    /**
-     * For every place a started body builds [name] — `::Name` or `Name(` — the definition nearest before
-     * it: `single`, `factory` or `scoped`, in the DSL or the constructor-reference form. A class built
-     * inside another definition's block, `single { Foo(Bar(get())) }`, is read as that definition, which
-     * is what Koin does with it.
-     */
     fun definitionKindsOf(name: String): List<String> {
         val built = Regex("""::\s*$name\b|\b$name\s*\(""")
 
@@ -167,11 +142,6 @@ object KoinGraph {
             }
     }
 
-    /**
-     * The bodies one entry of `container` starts: a common `val` for a bare name, a common `fun` for a
-     * call, or — for a call to an `expect fun` — exactly one `actual` body on every platform. Null for
-     * anything else.
-     */
     private fun resolve(
         entry: String,
         declared: List<Body>,
@@ -201,7 +171,6 @@ object KoinGraph {
         open: Int,
     ): String = code.substring(open + 1, closingOf(code, open))
 
-    /** Comments and literals are already blanked, so the brackets that are left balance. */
     private fun closingOf(
         code: String,
         open: Int,
