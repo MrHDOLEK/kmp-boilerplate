@@ -2,7 +2,11 @@
 agp = "8.11.2"
 detekt = "1.23.7"
 ktlint = "12.1.2"
-composeRules = "0.4.22"
+# compose-rules registers its rule set for one detekt major. 0.4.28 is the newest release whose jar still
+# registers io.gitlab.arturbosch.detekt.api.RuleSetProvider (detekt 1.x); 0.5.0-alpha1 and later register
+# dev.detekt.api.RuleSetProvider for detekt 2 and load nothing here. detektComposeCanary in
+# build.gradle.kts fails the build if the rules stop loading.
+composeRules = "0.4.28"
 android-compileSdk = "36"
 android-minSdk = "24"
 android-targetSdk = "36"

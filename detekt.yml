@@ -15,6 +15,7 @@ complexity:
   TooManyFunctions:
     thresholdInFiles: 20
     thresholdInClasses: 15
+    thresholdInInterfaces: 15
   ComplexCondition:
     threshold: 5
   CyclomaticComplexMethod:
@@ -85,7 +86,7 @@ Compose:
     active: true
   ModifierReused:
     active: true
-  MultipleContentEmitters:
+  MultipleEmitters:
     active: true
   MutableStateParam:
     active: true
