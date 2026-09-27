@@ -137,7 +137,7 @@ composeApp (UI)  →  application (actions, view models)  →  domain  ←  infr
 
 ### Domain
 
-Pure Kotlin: it may import only `kotlin`, `kotlinx.coroutines`, `kotlinx.datetime` and itself — no
+Pure Kotlin: it may import only `kotlin`, `kotlinx.coroutines`, `kotlinx.datetime` (once added) and itself — no
 Ktor, no serialization, no Compose. It is packaged **by feature**, so one area folder holds these kinds
 of file side by side:
 
@@ -209,7 +209,7 @@ a cancelled coroutine: swallowed, leaving a screen becomes a success carrying no
 rethrows the cancellation and packs everything else into the `Result`.
 
 A ViewModel mapper maps and nothing more: it names no service or repository, suspends nothing, and
-imports only Kotlin, `kotlinx.datetime`, the domain and the application.
+imports only Kotlin, `kotlinx.datetime` (once added), the domain and the application.
 
 ### Infrastructure
 
@@ -349,7 +349,8 @@ names (`Dto`, `Http`, `Json`), never the project's own concepts — `CatSyncServ
 
 Tests live in `shared/src/commonTest`, which runs on every target — desktop, Android and iOS. A test
 may sit in `desktopTest` or `androidUnitTest` only if it needs something only the JVM has; one that
-could run in commonTest and does not silently drops the iOS coverage.
+could run in commonTest and does not silently drops the iOS coverage. `androidInstrumentedTest`, which
+needs a device, is not judged by the gate.
 
 - Test names are backticked sentences starting with `should`.
 - Use hand-written fakes (`FakeCatRepository`), never a mocking library. A fake of a domain contract
@@ -505,12 +506,12 @@ typealias meets the same prohibition as an import.
 
 | Test | What it holds |
 |---|---|
-| `LayerDependencyTest` | Dependencies point inwards. The domain uses only `kotlin`, `kotlinx.coroutines`, `kotlinx.datetime` and itself; the application reaches neither infrastructure nor the UI; infrastructure never reaches the UI. |
+| `LayerDependencyTest` | Dependencies point inwards. The domain uses only `kotlin`, `kotlinx.coroutines`, `kotlinx.datetime` (once added) and itself; the application reaches neither infrastructure nor the UI; infrastructure never reaches the UI. |
 | `UserInterfaceBoundaryTest` | composeApp reaches infrastructure only through `config.bootstrap` and never names the domain. The application aliases no domain type. A ViewModel names nothing from the domain. |
 | `EntityRuleTest` | An entity names no service, repository contract or port. |
 | `NamingTest` | Contracts end in `Interface`, persistence ones in `RepositoryInterface`; a domain class taking a collaborator carries a service suffix; no technology in a repository's name; every use case is an `*Action` with `operator fun invoke`. |
 | `ActionRuleTest` | No repository or port in an action. `invoke` returns a `Result` with no domain type in it and builds it with `resultOf`. No `runCatching`, no `catch`. Nothing but `*Action` classes in the action package. |
-| `ViewModelMapperTest` | A ViewModel mapper names no service or repository, suspends nothing, and imports only Kotlin, `kotlinx.datetime`, the domain and the application. |
+| `ViewModelMapperTest` | A ViewModel mapper names no service or repository, suspends nothing, and imports only Kotlin, `kotlinx.datetime` (once added), the domain and the application. |
 | `RepositoryRuleTest` | A repository, chosen by role, names no domain service or clock, and sits under `repository/<area of its contract>/` or beside its adapter. |
 | `InfrastructureStructureTest` | DTOs in an adapter's `dto/`, mappers in its `mapper/`, no `dto` or `mapper` folder anywhere else. |
 | `DependencyInjectionTest` | Every module is started from `container`; every action, service, mapper and repository is registered; a class registered on one platform is registered on the others unless only that platform declares it; every implemented domain contract is bound; every action is a `factory`; every class that keeps state is a `single`. |

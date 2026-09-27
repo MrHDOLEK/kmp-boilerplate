@@ -202,7 +202,13 @@ class TestConventionTest {
         const val TEST = "Test"
         const val SHOULD = "`should "
 
-        /** The test source sets that run on the JVM alone, and the main source sets they see beside commonMain. */
+        /**
+         * The test source sets that run on the JVM alone, and the main source sets they see beside commonMain.
+         *
+         * androidInstrumentedTest is left out on purpose: it runs on a device or an emulator, so what it needs is the
+         * Android runtime rather than the JVM, and whether a test there could have been a commonTest one is the
+         * reviewer's. None exists today.
+         */
         val JVM_TESTS = setOf("desktopTest", "androidUnitTest")
         val JVM_MAINS = listOf("androidMain", "desktopMain")
 
