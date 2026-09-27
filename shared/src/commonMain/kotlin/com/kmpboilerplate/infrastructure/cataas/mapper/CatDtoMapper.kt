@@ -10,7 +10,6 @@ class CatDtoMapper {
             id = dto.id,
             tags = dto.tags,
             imageUrl = "$CATAAS_BASE_URL/cat/${dto.id}",
-            createdAt = dto.createdAt,
         )
 
     fun mapCollection(dtos: List<CatDto>): List<Cat> = dtos.map { dto -> map(dto) }

@@ -9,7 +9,7 @@ class CatDtoMapperTest {
     @Test
     fun `should resolve the image url from the cat id`() {
         // Arrange
-        val dto = CatDto(id = "abc123", tags = listOf("cute"), createdAt = "2025-01-01T00:00:00Z")
+        val dto = CatDto(id = "abc123", tags = listOf("cute"))
 
         // Act
         val cat = CatDtoMapper().map(dto)
@@ -20,7 +20,6 @@ class CatDtoMapperTest {
                 id = "abc123",
                 tags = listOf("cute"),
                 imageUrl = "https://cataas.com/cat/abc123",
-                createdAt = "2025-01-01T00:00:00Z",
             ),
             cat,
         )

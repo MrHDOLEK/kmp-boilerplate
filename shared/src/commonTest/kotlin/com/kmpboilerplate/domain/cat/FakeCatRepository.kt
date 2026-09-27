@@ -49,6 +49,6 @@ class FakeCatRepository(
         fun cat(
             id: String,
             tags: List<String> = emptyList(),
-        ): Cat = Cat(id = id, tags = tags, imageUrl = "https://example.com/cat/$id", createdAt = null)
+        ): Cat = Cat(id = id, tags = tags, imageUrl = "https://example.com/cat/$id")
     }
 }

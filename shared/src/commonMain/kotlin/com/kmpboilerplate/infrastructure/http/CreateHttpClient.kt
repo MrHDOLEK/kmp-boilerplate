@@ -12,7 +12,6 @@ fun createHttpClient(): HttpClient =
                 Json {
                     ignoreUnknownKeys = true
                     isLenient = true
-                    useAlternativeNames = true
                 },
             )
         }
