@@ -3,36 +3,13 @@ package com.kmpboilerplate.architecture
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/**
- * Comments: production code says what it does through its names and its shape.
- * A `//` or `/* */` comment inside it is a sentence the code failed to say, and the fix is the code — a
- * name, an extracted function, a value object — not the comment.
- *
- * Two comments stay, each where it belongs:
- *
- * - **Block tags on a declaration.** A `/** */` holding only block tags that documentation tools read —
- *   `@param`, `@property`, `@return`, `@throws`… — is kept, the way a PHP docblock keeps its
- *   annotations. Prose in a KDoc is narration like any other comment. The block counts only when the
- *   first code token after it starts a declaration: an annotation (`@`), a modifier or declaration
- *   keyword (`private`, `fun`, `val`, `class`, `init`…), a parameter (`name:`), or an enum entry (a
- *   SCREAMING_SNAKE name followed by `,`, `;`, `(`, `{` or `}`). The check reads that one token only, so
- *   a tag block on a local declaration inside a body passes.
- * - **The reason next to a suppression**, where [SuppressionTest] looks for it: any comment on the
- *   annotation's own line, or one `//` line directly above it. The annotation is found by
- *   [SuppressAnnotation], so both tests read the same spellings.
- *
- * Tests are outside this rule; it reads production source sets only.
- */
 class CommentTest {
     @Test
     fun `should say in code what a comment would explain`() {
-        val files = ProjectScope.production.files
-        val offenders =
-            files.flatMap { file ->
-                commentsIn(file.projectPath.replace('\\', '/').trimStart('/'), file.text)
-            }
+        val files = SourceTree.kotlinFiles
+        val offenders = files.flatMap { file -> commentsIn(SourceTree.pathOf(file), file.readText()) }
 
-        assertTrue(files.isNotEmpty(), "No production file found; the scope is misconfigured.")
+        assertTrue(files.isNotEmpty(), "No Kotlin file found under ${SourceTree.root}; the scope is misconfigured.")
         assertTrue(offenders.isEmpty(), "$NO_COMMENTS\n${offenders.joinToString(separator = "\n")}")
     }
 
@@ -42,11 +19,14 @@ class CommentTest {
     ): List<String> {
         val symbols = KotlinSources.symbolsOf(text)
         val reasonLines = reasonLinesOf(text)
+        val codeLines = KotlinSources.codeOf(text).lines()
+        val inTestSourceSet = isTestSourceSet(path)
 
         return KotlinSources
             .commentsOf(text)
             .filterNot { range -> isDocumentation(text, symbols, range) }
             .filterNot { range -> SuppressAnnotation.lineAt(text, range.first) in reasonLines }
+            .filterNot { range -> inTestSourceSet && isArrangeActAssertMarker(text, codeLines, range) }
             .map { range ->
                 "$path:${SuppressAnnotation.lineAt(text, range.first) + 1}: " +
                     text.substring(range).lineSequence().first()
@@ -63,7 +43,6 @@ class CommentTest {
             holdsOnlyBlockTags(text.substring(range)) &&
             DECLARATION_START.matchesAt(symbols, firstTokenAfter(symbols, range.last + 1))
 
-    /** @return true when the first line with any text in the block starts with a block tag. */
     private fun holdsOnlyBlockTags(kdoc: String): Boolean =
         kdoc
             .removePrefix(KDOC)
@@ -72,6 +51,25 @@ class CommentTest {
             .map { line -> line.trim().removePrefix("*").trim() }
             .firstOrNull { line -> line.isNotEmpty() }
             ?.startsWith("@") == true
+
+    private fun isTestSourceSet(path: String): Boolean {
+        val segments = path.split('/')
+        val sourceSet =
+            segments
+                .indexOf(SOURCE_ROOT)
+                .takeIf { index -> index >= 0 }
+                ?.let { index -> segments.getOrNull(index + 1) }
+
+        return sourceSet != null && (sourceSet.endsWith("Test") || sourceSet.endsWith("test"))
+    }
+
+    private fun isArrangeActAssertMarker(
+        text: String,
+        codeLines: List<String>,
+        range: IntRange,
+    ): Boolean =
+        text.substring(range).trimEnd() in ARRANGE_ACT_ASSERT &&
+            codeLines[SuppressAnnotation.lineAt(text, range.first)].isBlank()
 
     private fun firstTokenAfter(
         symbols: String,
@@ -84,10 +82,6 @@ class CommentTest {
         return at
     }
 
-    /**
-     * The lines a suppression's reason may start on: the annotation's own line, and the line directly
-     * above it when that line is a `//` comment and nothing else.
-     */
     private fun reasonLinesOf(text: String): Set<Int> {
         val rawLines = text.lines()
         val codeLines = KotlinSources.codeOf(text).lines()
@@ -109,8 +103,10 @@ class CommentTest {
         const val EMPTY_BLOCK = "/**/"
         const val BLOCK_END = "*/"
         const val LINE_COMMENT = "//"
+        const val SOURCE_ROOT = "src"
 
-        /** What may follow a KDoc: see the class KDoc. Matched at the first code token after it. */
+        val ARRANGE_ACT_ASSERT = setOf("// Arrange", "// Act", "// Assert")
+
         val DECLARATION_START =
             Regex(
                 """@|(?:public|private|protected|internal|open|final|abstract|sealed|data|enum|annotation|""" +
@@ -120,8 +116,9 @@ class CommentTest {
             )
 
         const val NO_COMMENTS =
-            "Production code explains itself: rename, extract a function or a value, and drop the comment. " +
-                "Block tags that documentation tools read (@param, @property, @return…) on a declaration and the " +
-                "reason next to a @Suppress are the only comments allowed."
+            "Code explains itself - production, tests and Gradle scripts alike: rename, extract a function or a " +
+                "value, and drop the comment. The only comments allowed are block tags that documentation tools " +
+                "read (@param, @property, @return…) on a declaration, the reason next to a @Suppress, and the " +
+                "exact // Arrange, // Act and // Assert markers in a test source set."
     }
 }

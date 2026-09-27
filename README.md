@@ -317,17 +317,20 @@ suspend fun getRandomCat(): Cat = catRepository.getRandomCat()
 
 ### Comments
 
-**No `//` or `/* */` comment in production code.** If a line needs a comment to be understood, the
-code is not readable yet: put the meaning in a name, extract a function or a named value, and delete
-the rest. A KDoc paragraph is prose like any other comment.
+**No `//` or `/* */` comment in any Kotlin file** — production code, tests, the `:architecture` rules
+and the `.gradle.kts` scripts alike. If a line needs a comment to be understood, the code is not
+readable yet: put the meaning in a name, extract a function or a named value, and delete the rest. A KDoc paragraph is prose like any other comment.
 
-Two comments stay:
+Three comments stay:
 
 - a KDoc made only of block tags that documentation tools read (`@param`, `@property`, `@return`,
   `@throws`, `@see`) on a declaration;
-- the reason next to a `@Suppress`, on the annotation's line or in one `//` line directly above it.
+- the reason next to a `@Suppress`, on the annotation's line or in one `//` line directly above it;
+- the Arrange-Act-Assert markers in a test source set, each a line that is exactly `// Arrange`,
+  `// Act` or `// Assert`.
 
-Tests and Gradle scripts are outside this rule.
+The rule reads Kotlin only: the `justfile`'s recipe descriptions and shell, YAML and `.properties`
+comments are outside it.
 
 ### Language
 
@@ -521,7 +524,7 @@ typealias meets the same prohibition as an import.
 | `SourceLayoutTest` | The package matches the folder. Each module keeps to its package roots. No source hides from Konsist under `build/`, `target/` or a `buildsrc` name. |
 | `UserInterfaceStructureTest` | No Koin and no use case in a component; every component under an area of `application/viewmodel` or `common/`; only `*Screen` files in `ui/screen/`. |
 | `PlatformActualTest` | Every `expect` has an `actual` in `androidMain`, `iosMain` and `desktopMain`. |
-| `CommentTest` | No `//` or `/* */` comment and no prose KDoc in production code; only a block-tag KDoc on a declaration and a suppression's reason. |
+| `CommentTest` | No `//` or `/* */` comment and no prose KDoc in any `.kt` or `.kts` file — production, tests and Gradle scripts; only a block-tag KDoc on a declaration, a suppression's reason and the `// Arrange`, `// Act`, `// Assert` markers in tests. |
 | `SuppressionTest` | No suppression switches off an architecture rule, `LongMethod` in composeApp or ktlint as a whole, under every spelling Konsist, detekt and ktlint honour; every `@Suppress` says why. |
 | `DisplayTextTest` | No non-ASCII letter in production code or its literals, and no phrase in a string literal of the domain. |
 | `TestConventionTest` | Test names are `should` sentences; a test stays in a JVM test source set only if it needs the JVM; no mocking library and nothing named as a mock. |
