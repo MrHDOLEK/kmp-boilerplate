@@ -1,4 +1,4 @@
-package com.kmpboilerplate.app.ui.component
+package com.kmpboilerplate.app.ui.component.common
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding

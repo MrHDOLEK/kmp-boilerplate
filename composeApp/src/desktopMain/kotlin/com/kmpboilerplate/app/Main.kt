@@ -4,14 +4,16 @@ import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import com.kmpboilerplate.infrastructure.config.bootstrap
 
-fun main() =
-    application {
-        bootstrap()
+private const val WINDOW_TITLE = "KMP Boilerplate"
 
+fun main() {
+    bootstrap()
+    application {
         Window(
             onCloseRequest = ::exitApplication,
-            title = "KMP Boilerplate",
+            title = WINDOW_TITLE,
         ) {
             App()
         }
     }
+}

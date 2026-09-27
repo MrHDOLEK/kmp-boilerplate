@@ -1,8 +1,13 @@
-package com.kmpboilerplate.app.ui.component
+package com.kmpboilerplate.app.ui.component.cat
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.*
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -10,13 +15,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
+import com.kmpboilerplate.app.resources.Res
+import com.kmpboilerplate.app.resources.cat_image_description
+import com.kmpboilerplate.application.viewmodel.cat.CatViewModel
+import org.jetbrains.compose.resources.stringResource
 
 @Composable
-fun ImageTile(
-    imageUrl: String,
-    contentDescription: String,
+fun CatTile(
+    cat: CatViewModel,
     modifier: Modifier = Modifier,
-    badge: @Composable () -> Unit = {},
 ) {
     Card(
         modifier =
@@ -28,41 +35,20 @@ fun ImageTile(
     ) {
         Box {
             AsyncImage(
-                model = imageUrl,
-                contentDescription = contentDescription,
+                model = cat.imageUrl,
+                contentDescription = stringResource(Res.string.cat_image_description),
                 modifier =
                     Modifier
                         .fillMaxSize()
                         .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop,
             )
-            Box(
+            TagBadge(
+                tags = cat.tags,
                 modifier =
                     Modifier
                         .align(Alignment.BottomStart)
                         .padding(8.dp),
-            ) {
-                badge()
-            }
-        }
-    }
-}
-
-@Composable
-fun TagBadge(
-    tags: List<String>,
-    modifier: Modifier = Modifier,
-) {
-    if (tags.isNotEmpty()) {
-        Surface(
-            modifier = modifier,
-            shape = RoundedCornerShape(8.dp),
-            color = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f),
-        ) {
-            Text(
-                text = tags.take(2).joinToString(", "),
-                style = MaterialTheme.typography.labelSmall,
-                modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
             )
         }
     }

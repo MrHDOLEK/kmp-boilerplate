@@ -1,20 +1,38 @@
 package com.kmpboilerplate.app.ui.screen
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.kmpboilerplate.app.ui.component.*
+import com.kmpboilerplate.app.resources.Res
+import com.kmpboilerplate.app.resources.cats_load_failed
+import com.kmpboilerplate.app.resources.cats_title
+import com.kmpboilerplate.app.resources.random_cat
+import com.kmpboilerplate.app.ui.component.cat.CatTile
+import com.kmpboilerplate.app.ui.component.common.ChipRow
+import com.kmpboilerplate.app.ui.component.common.ErrorState
+import com.kmpboilerplate.app.ui.component.common.LoadingState
 import com.kmpboilerplate.app.ui.layout.AppLayout
-import com.kmpboilerplate.application.action.GetCatTagsAction
-import com.kmpboilerplate.application.action.GetCatsAction
-import com.kmpboilerplate.application.action.GetRandomCatAction
-import com.kmpboilerplate.domain.entity.Cat
+import com.kmpboilerplate.application.action.cat.GetCatTagsAction
+import com.kmpboilerplate.application.action.cat.GetCatsAction
+import com.kmpboilerplate.application.action.cat.GetRandomCatAction
+import com.kmpboilerplate.application.viewmodel.cat.CatViewModel
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
 @Composable
@@ -23,57 +41,35 @@ fun CatScreen(
     getCats: GetCatsAction = koinInject(),
     getCatTags: GetCatTagsAction = koinInject(),
 ) {
-    var cats by remember { mutableStateOf<List<Cat>>(emptyList()) }
+    var cats by remember { mutableStateOf<List<CatViewModel>>(emptyList()) }
     var tags by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedTag by remember { mutableStateOf<String?>(null) }
     var isLoading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-
+    var hasFailed by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
-    fun loadCats() {
-        scope.launch {
-            isLoading = true
-            error = null
-            getCats(tags = selectedTag?.let { listOf(it) }, limit = 20)
-                .onSuccess { cats = it }
-                .onFailure { error = it.message }
-            isLoading = false
-        }
-    }
-
-    fun loadTags() {
-        scope.launch {
-            getCatTags()
-                .onSuccess { tags = it.take(20) }
-        }
-    }
-
-    fun loadRandomCat() {
-        scope.launch {
-            isLoading = true
-            error = null
-            getRandomCat()
-                .onSuccess { cats = listOf(it) }
-                .onFailure { error = it.message }
-            isLoading = false
-        }
+    suspend fun show(load: suspend () -> Result<List<CatViewModel>>) {
+        isLoading = true
+        hasFailed = false
+        load()
+            .onSuccess { loaded -> cats = loaded }
+            .onFailure { hasFailed = true }
+        isLoading = false
     }
 
     LaunchedEffect(Unit) {
-        loadTags()
-        loadCats()
+        getCatTags().onSuccess { loaded -> tags = loaded }
     }
 
     LaunchedEffect(selectedTag) {
-        loadCats()
+        show { getCats(selectedTag) }
     }
 
     AppLayout(
-        title = "Cats",
+        title = stringResource(Res.string.cats_title),
         actions = {
-            TextButton(onClick = { loadRandomCat() }) {
-                Text("Random")
+            TextButton(onClick = { scope.launch { show { getRandomCat().map { cat -> listOf(cat) } } } }) {
+                Text(stringResource(Res.string.random_cat))
             }
         },
     ) { padding ->
@@ -88,37 +84,38 @@ fun CatScreen(
                 ChipRow(
                     items = tags,
                     selected = selectedTag,
-                    onSelect = { selectedTag = it },
-                    labelSelector = { it },
+                    onSelect = { tag -> selectedTag = tag },
+                    labelSelector = { tag -> tag },
                     modifier = Modifier.padding(top = 8.dp),
                 )
             }
-
-            error?.let {
+            if (hasFailed) {
                 ErrorState(
-                    message = it,
-                    onRetry = { loadCats() },
+                    message = stringResource(Res.string.cats_load_failed),
+                    onRetry = { scope.launch { show { getCats(selectedTag) } } },
                 )
             }
-
             if (isLoading) {
                 LoadingState()
             }
+            CatGrid(cats = cats)
+        }
+    }
+}
 
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(minSize = 160.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                items(cats) { cat ->
-                    ImageTile(
-                        imageUrl = cat.imageUrl,
-                        contentDescription = "Cat",
-                        badge = { TagBadge(cat.tags) },
-                    )
-                }
-            }
+@Composable
+private fun CatGrid(
+    cats: List<CatViewModel>,
+    modifier: Modifier = Modifier,
+) {
+    LazyVerticalGrid(
+        columns = GridCells.Adaptive(minSize = 160.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+        modifier = modifier.fillMaxSize(),
+    ) {
+        items(cats) { cat ->
+            CatTile(cat = cat)
         }
     }
 }

@@ -1,0 +1,7 @@
+<resources>
+    <string name="cats_title">Cats</string>
+    <string name="random_cat">Random</string>
+    <string name="retry">Retry</string>
+    <string name="cats_load_failed">Could not load the cats.</string>
+    <string name="cat_image_description">Cat</string>
+</resources>
