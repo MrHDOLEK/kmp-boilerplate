@@ -9,6 +9,10 @@ on:
       - edited
       - synchronize
 
+# The action reads the pull request through the API, which the default token may not.
+permissions:
+  pull-requests: read
+
 jobs:
   check-pr-title:
     name: Check the PR title
