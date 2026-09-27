@@ -80,7 +80,7 @@ dependencies {
 // compose-rules is found through ServiceLoader, under the provider interface of the detekt major it was
 // built for. A release built for detekt 2 registers dev.detekt.api.RuleSetProvider, which detekt 1.23 never
 // asks for: the Compose rules vanished and detekt passed in silence from 0.6.6 on. The canary lints a probe
-// that breaks the three Compose rules AGENTS.md relies on and fails unless detekt reports every one.
+// that breaks the three Compose rules the README relies on and fails unless detekt reports every one.
 val composeRulesProbe = layout.buildDirectory.file("detekt-compose-canary/ComposeRulesProbe.kt")
 val composeRulesProbeConsole = layout.buildDirectory.file("detekt-compose-canary/console.yml")
 
