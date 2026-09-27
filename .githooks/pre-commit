@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Pre-commit quality gate. Enable once per clone:
+#   git config core.hooksPath .githooks
+set -uo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root" || exit 1
+
+# Deletions count: removing a file can break a rule as surely as editing one. The version catalog counts
+# too: it pins the tools the gates run.
+if ! git diff --cached --name-only --diff-filter=ACMRD | grep -qE '\.(kts?|toml)$'; then
+  exit 0
+fi
+
+[[ -x ./gradlew ]] || exit 0
+
+gates="csCheck detekt :architecture:test"
+
+echo "pre-commit: running ./gradlew $gates"
+if ! ./gradlew $gates --console=plain --quiet; then
+  echo
+  echo "pre-commit: quality gate FAILED."
+  echo "  ./gradlew csFix               # auto-fix formatting"
+  echo "  ./gradlew detekt              # re-check static analysis"
+  echo "  ./gradlew :architecture:test  # re-check architecture rules"
+  echo "Commit aborted. Use --no-verify only with a deliberate reason."
+  exit 1
+fi

@@ -8,9 +8,12 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read
+
 jobs:
   lint:
-    name: Lint & code style
+    name: Lint, code style & architecture
     timeout-minutes: 15
     if: github.event.pull_request.draft == false
     runs-on: ubuntu-24.04
@@ -26,11 +29,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@af1da67850ed9a4cedd57bfd976089dd991e2582 # v4.0.0
 
-      - name: Run Detekt
-        run: ./gradlew detekt
-
-      - name: Run code style check
-        run: ./gradlew csCheck
+      - name: Run detekt, code style and architecture tests
+        run: ./gradlew detekt csCheck :architecture:test
 
   test:
     name: Tests (${{ matrix.name }})
@@ -50,7 +50,8 @@ jobs:
             timeout: 15
             command: ./gradlew :shared:testDebugUnitTest :composeApp:testDebugUnitTest
           - name: iOS Simulator
-            os: macos-15
+            # macos-26 ships Xcode 26 by default.
+            os: macos-26
             timeout: 20
             command: ./gradlew :shared:iosSimulatorArm64Test :composeApp:iosSimulatorArm64Test
     steps:

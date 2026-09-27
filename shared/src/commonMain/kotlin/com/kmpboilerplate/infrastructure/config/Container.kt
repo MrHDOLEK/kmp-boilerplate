@@ -1,17 +1,20 @@
 package com.kmpboilerplate.infrastructure.config
 
-import com.kmpboilerplate.application.action.GetCatTagsAction
-import com.kmpboilerplate.application.action.GetCatsAction
-import com.kmpboilerplate.application.action.GetRandomCatAction
-import com.kmpboilerplate.domain.repository.CatRepositoryInterface
+import com.kmpboilerplate.application.action.cat.GetCatTagsAction
+import com.kmpboilerplate.application.action.cat.GetCatsAction
+import com.kmpboilerplate.application.action.cat.GetRandomCatAction
+import com.kmpboilerplate.application.viewmodel.mapper.cat.CatViewModelMapper
+import com.kmpboilerplate.domain.cat.CatRepositoryInterface
+import com.kmpboilerplate.domain.cat.CatService
+import com.kmpboilerplate.infrastructure.cataas.CatRepository
+import com.kmpboilerplate.infrastructure.cataas.mapper.CatDtoMapper
 import com.kmpboilerplate.infrastructure.http.createHttpClient
-import com.kmpboilerplate.infrastructure.repository.CatRepository
 import org.koin.core.module.dsl.factoryOf
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.bind
 import org.koin.dsl.module
 
-val networkModule =
+val httpModule =
     module {
         single { createHttpClient() }
     }
@@ -21,6 +24,17 @@ val repositoryModule =
         singleOf(::CatRepository) bind CatRepositoryInterface::class
     }
 
+val serviceModule =
+    module {
+        factoryOf(::CatService)
+    }
+
+val mapperModule =
+    module {
+        factoryOf(::CatDtoMapper)
+        factoryOf(::CatViewModelMapper)
+    }
+
 val actionModule =
     module {
         factoryOf(::GetRandomCatAction)
@@ -28,4 +42,4 @@ val actionModule =
         factoryOf(::GetCatTagsAction)
     }
 
-val container = listOf(networkModule, repositoryModule, actionModule)
+val container = listOf(httpModule, repositoryModule, serviceModule, mapperModule, actionModule)
