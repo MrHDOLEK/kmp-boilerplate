@@ -22,7 +22,7 @@ fun <T> ChipRow(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier.padding(bottom = 16.dp),
     ) {
-        items(items) { item ->
+        items(items, key = { item -> labelSelector(item) }) { item ->
             FilterChip(
                 selected = selected == item,
                 onClick = { onSelect(if (selected == item) null else item) },

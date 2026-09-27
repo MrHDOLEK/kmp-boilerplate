@@ -12,9 +12,9 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -31,7 +31,6 @@ import com.kmpboilerplate.application.action.cat.GetCatTagsAction
 import com.kmpboilerplate.application.action.cat.GetCatsAction
 import com.kmpboilerplate.application.action.cat.GetRandomCatAction
 import com.kmpboilerplate.application.viewmodel.cat.CatViewModel
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 import org.koin.compose.koinInject
 
@@ -44,31 +43,40 @@ fun CatScreen(
     var cats by remember { mutableStateOf<List<CatViewModel>>(emptyList()) }
     var tags by remember { mutableStateOf<List<String>>(emptyList()) }
     var selectedTag by remember { mutableStateOf<String?>(null) }
+    var showsRandomCat by remember { mutableStateOf(false) }
+    var attempt by remember { mutableIntStateOf(0) }
     var isLoading by remember { mutableStateOf(false) }
-    var hasFailed by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
+    var catsFailed by remember { mutableStateOf(false) }
+    var tagsFailed by remember { mutableStateOf(false) }
 
-    suspend fun show(load: suspend () -> Result<List<CatViewModel>>) {
+    LaunchedEffect(attempt) {
+        if (tags.isEmpty()) {
+            tagsFailed = false
+            getCatTags()
+                .onSuccess { loaded -> tags = loaded }
+                .onFailure { tagsFailed = true }
+        }
+    }
+
+    LaunchedEffect(selectedTag, showsRandomCat, attempt) {
         isLoading = true
-        hasFailed = false
-        load()
-            .onSuccess { loaded -> cats = loaded }
-            .onFailure { hasFailed = true }
+        catsFailed = false
+        val loaded = if (showsRandomCat) getRandomCat().map { cat -> listOf(cat) } else getCats(selectedTag)
+        loaded
+            .onSuccess { found -> cats = found }
+            .onFailure { catsFailed = true }
         isLoading = false
-    }
-
-    LaunchedEffect(Unit) {
-        getCatTags().onSuccess { loaded -> tags = loaded }
-    }
-
-    LaunchedEffect(selectedTag) {
-        show { getCats(selectedTag) }
     }
 
     AppLayout(
         title = stringResource(Res.string.cats_title),
         actions = {
-            TextButton(onClick = { scope.launch { show { getRandomCat().map { cat -> listOf(cat) } } } }) {
+            TextButton(
+                onClick = {
+                    showsRandomCat = true
+                    attempt++
+                },
+            ) {
                 Text(stringResource(Res.string.random_cat))
             }
         },
@@ -84,15 +92,18 @@ fun CatScreen(
                 ChipRow(
                     items = tags,
                     selected = selectedTag,
-                    onSelect = { tag -> selectedTag = tag },
+                    onSelect = { tag ->
+                        selectedTag = tag
+                        showsRandomCat = false
+                    },
                     labelSelector = { tag -> tag },
                     modifier = Modifier.padding(top = 8.dp),
                 )
             }
-            if (hasFailed) {
+            if (catsFailed || tagsFailed) {
                 ErrorState(
                     message = stringResource(Res.string.cats_load_failed),
-                    onRetry = { scope.launch { show { getCats(selectedTag) } } },
+                    onRetry = { attempt++ },
                 )
             }
             if (isLoading) {
@@ -114,7 +125,7 @@ private fun CatGrid(
         verticalArrangement = Arrangement.spacedBy(12.dp),
         modifier = modifier.fillMaxSize(),
     ) {
-        items(cats) { cat ->
+        items(cats, key = { cat -> cat.id }) { cat ->
             CatTile(cat = cat)
         }
     }
